@@ -3,7 +3,7 @@ import { suggestFestivals } from '@/constants/festivals';
 import { notebookStorageKey, notebookAccent, type NotebookMode } from '@/constants/notebook-modes';
 import { suggestBands } from '@/constants/bands';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Alert, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -21,11 +21,24 @@ const group = (records: Entry[], field: 'band') => {
   return [...map.values()].sort((a,b) => b.count-a.count || a.name.localeCompare(b.name));
 };
 
-const NotebookTabContext = createContext<{ tab: string; setTab: (tab: string) => void } | null>(null);
+const NotebookTabContext = createContext<{
+  tab: string;
+  setTab: (tab: string) => void;
+  descriptionHeight: number;
+  measureDescription: (mode: NotebookMode, height: number) => void;
+} | null>(null);
 
 export default function HomeScreen() {
   const [tab, setTab] = useState('記録');
-  return <NotebookTabContext.Provider value={{ tab, setTab }}>
+  const [descriptionHeights, setDescriptionHeights] = useState({ band: 0, festival: 0 });
+  const measureDescription = useCallback((mode: NotebookMode, height: number) => {
+    const roundedHeight = Math.ceil(height);
+    setDescriptionHeights(previous => previous[mode] === roundedHeight
+      ? previous
+      : { ...previous, [mode]: roundedHeight });
+  }, []);
+  const descriptionHeight = Math.max(descriptionHeights.band, descriptionHeights.festival);
+  return <NotebookTabContext.Provider value={{ tab, setTab, descriptionHeight, measureDescription }}>
     <NotebookPager key="band-first" Page={TeeNotebook} />
   </NotebookTabContext.Provider>;
 }
@@ -39,7 +52,7 @@ function TeeNotebook({ mode, onSwitch }: { mode: NotebookMode; onSwitch: (mode: 
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [storageError, setStorageError] = useState(false);
-  const { tab, setTab } = useContext(NotebookTabContext)!;
+  const { tab, setTab, descriptionHeight, measureDescription } = useContext(NotebookTabContext)!;
   const [band, setBand] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [count, setCount] = useState(1);
@@ -111,7 +124,9 @@ function TeeNotebook({ mode, onSwitch }: { mode: NotebookMode; onSwitch: (mode: 
             <Text style={styles.label}>{festival ? 'フェス名' : 'バンド名'}</Text>
             <TextInput accessibilityLabel={festival ? 'フェス名' : 'バンド名'} value={band} onChangeText={text => { setBand(text); setShowSuggestions(true); }} onFocus={() => setShowSuggestions(true)} autoCorrect={false} placeholderTextColor="#85858F" maxLength={100} style={styles.input} />
             {suggestions.length > 0 && <View style={styles.suggestions}><Text style={styles.note}>候補をタップして入力</Text>{suggestions.map(item => <Pressable accessibilityRole="button" accessibilityLabel={item.name + 'を選択'} key={item.name} onPress={() => { setBand(item.name); setShowSuggestions(false); Keyboard.dismiss(); }} style={styles.suggestion}><Text style={styles.suggestionName}>{item.name}</Text><Text style={styles.note}>{item.used ? '記録済み' : '＋'}</Text></Pressable>)}</View>}
-            <Text style={styles.note}>{festival ? 'フェス名や略称で検索。候補にないフェスも記録できます。' : '英字・ひらがな・カタカナで候補を検索できます。候補にない名前もそのまま記録できます。'}</Text>
+            <View style={{ minHeight: descriptionHeight }}>
+              <Text style={styles.note} onLayout={event => measureDescription(mode, event.nativeEvent.layout.height)}>{festival ? 'フェス名や略称で検索。候補にないフェスも記録できます。' : '英字・ひらがな・カタカナで候補を検索できます。候補にない名前もそのまま記録できます。'}</Text>
+            </View>
             <Text style={styles.label}>枚数</Text>
             <View style={styles.stepper}>
               <Pressable accessibilityRole="button" accessibilityLabel="枚数を1減らす" disabled={count <= 1 || busy} onPress={() => setCount(n => Math.max(1,n-1))} style={[styles.stepButton,(count<=1 || busy) && styles.disabled]}><Text style={styles.stepSymbol}>−</Text></Pressable>
