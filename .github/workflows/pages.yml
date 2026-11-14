@@ -25,11 +25,11 @@ jobs:
       - uses: actions/configure-pages@v5
         id: pages
       - run: npm ci
-      - run: npm run lint
-      - run: npx tsc --noEmit
       - run: npm run build
         env:
           GITHUB_PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+      - run: npm run lint
+      - run: npx tsc --noEmit
       - uses: actions/upload-pages-artifact@v4
         with:
           path: dist
