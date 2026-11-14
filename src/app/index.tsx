@@ -3,7 +3,7 @@ import { suggestFestivals } from '@/constants/festivals';
 import { notebookStorageKey, notebookAccent, type NotebookMode } from '@/constants/notebook-modes';
 import { suggestBands } from '@/constants/bands';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { Alert, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -21,8 +21,13 @@ const group = (records: Entry[], field: 'band') => {
   return [...map.values()].sort((a,b) => b.count-a.count || a.name.localeCompare(b.name));
 };
 
+const NotebookTabContext = createContext<{ tab: string; setTab: (tab: string) => void } | null>(null);
+
 export default function HomeScreen() {
-  return <NotebookPager key="band-first" Page={TeeNotebook} />;
+  const [tab, setTab] = useState('記録');
+  return <NotebookTabContext.Provider value={{ tab, setTab }}>
+    <NotebookPager key="band-first" Page={TeeNotebook} />
+  </NotebookTabContext.Provider>;
 }
 
 function TeeNotebook({ mode, onSwitch }: { mode: NotebookMode; onSwitch: (mode: NotebookMode) => void }) {
@@ -34,7 +39,7 @@ function TeeNotebook({ mode, onSwitch }: { mode: NotebookMode; onSwitch: (mode: 
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [storageError, setStorageError] = useState(false);
-  const [tab, setTab] = useState('記録');
+  const { tab, setTab } = useContext(NotebookTabContext)!;
   const [band, setBand] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [count, setCount] = useState(1);
