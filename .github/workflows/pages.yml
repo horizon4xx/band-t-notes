@@ -30,6 +30,7 @@ jobs:
           GITHUB_PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
       - run: npm run lint
       - run: npx tsc --noEmit
+      - run: node --test tests/*.test.cjs
       - uses: actions/upload-pages-artifact@v4
         with:
           path: dist

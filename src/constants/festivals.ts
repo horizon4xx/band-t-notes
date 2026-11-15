@@ -78,7 +78,6 @@ const key = (s: string) => s.normalize('NFKC').toLowerCase()
 
 export function suggestFestivals(input: string, history: readonly { band: string; count: number }[]) {
   const query = key(input);
-  if (!query) return [];
   const usage = new Map<string, number>();
   for (const entry of history) usage.set(key(entry.band), (usage.get(key(entry.band)) || 0) + entry.count);
   const catalog = new Map<string, { name: string; aliases: string[] }>();
@@ -86,11 +85,19 @@ export function suggestFestivals(input: string, history: readonly { band: string
     const previous = catalog.get(key(name));
     catalog.set(key(name), { name, aliases: [...(previous?.aliases || []), ...aliases.split(',')] });
   }
+  const personal = new Set<string>();
+  const knownAliases = new Set([...catalog.values()].flatMap(festival => [festival.name, ...festival.aliases].map(key)));
+  for (const entry of history) {
+    const name = entry.band.trim();
+    if (!key(name) || knownAliases.has(key(name))) continue;
+    personal.add(key(name));
+    if (!catalog.has(key(name))) catalog.set(key(name), { name, aliases: [] });
+  }
   return [...catalog.values()].map(festival => {
     const terms = [festival.name, ...festival.aliases].map(key);
     const match = terms.includes(query) ? 3 : terms.some(t => t.startsWith(query)) ? 2 : terms.some(t => t.includes(query)) ? 1 : 0;
-    return { ...festival, match, used: usage.has(key(festival.name)), frequency: usage.get(key(festival.name)) || 0 };
-  }).filter(festival => festival.match > 0)
-    .sort((a, b) => b.match - a.match || b.frequency - a.frequency || a.name.localeCompare(b.name))
+    return { ...festival, match, custom: personal.has(key(festival.name)), used: usage.has(key(festival.name)), frequency: usage.get(key(festival.name)) || 0 };
+  }).filter(festival => query ? festival.match > 0 : festival.custom)
+    .sort((a, b) => b.match - a.match || Number(b.custom) - Number(a.custom) || b.frequency - a.frequency || a.name.localeCompare(b.name))
     .slice(0, 8);
 }

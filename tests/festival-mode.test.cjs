@@ -31,8 +31,11 @@ test('festival suggestions accept Japanese readings and abbreviations', () => {
   assert.deepEqual(suggestFestivals('', []), []);
 });
 
-test('festival search excludes band names and duplicates', () => {
-  assert.deepEqual(suggestFestivals('Knosis', [{ band: 'Knosis', count: 10 }]), []);
+test('festival search adds personal festival names without duplicates', () => {
+  assert.equal(suggestFestivals('my', [{ band: 'MY FES', count: 10 }])[0].name, 'MY FES');
+  assert.equal(suggestFestivals('', [{ band: 'MY FES', count: 10 }])[0].name, 'MY FES');
+  assert.equal(suggestFestivals('s', [{ band: 'SUMMER LOCAL FES', count: 2 }])[0].name, 'SUMMER LOCAL FES');
+  assert.equal(suggestFestivals('my', [{ band: 'MY FES', count: 1 }, { band: 'ｍｙ ｆｅｓ', count: 1 }]).length, 1);
   const suggestions = suggestFestivals('love', []);
   assert.equal(new Set(suggestions.map(s => s.name)).size, suggestions.length);
 });

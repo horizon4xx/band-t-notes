@@ -42,8 +42,12 @@ test('history aliases resolve to the same artist without duplicate candidates', 
   assert.equal(new Set(a.map(x => x.name)).size, a.length);
 });
 
-test('history cannot introduce names outside the existing catalog', () => {
-  assert.deepEqual(suggestBands('存在しないテストバンド', [record('存在しないテストバンド')]), []);
+test('personal names join suggestions and take priority among matching names', () => {
+  assert.equal(suggestBands('存在しないテストバンド', [record('存在しないテストバンド')])[0].name, '存在しないテストバンド');
+  assert.equal(suggestBands('s', [record('SUMIKA LOCAL')])[0].name, 'SUMIKA LOCAL');
+  assert.equal(suggestBands('sumika', [record('SUMIKA LOCAL')])[0].name, 'sumika');
+  assert.equal(suggestBands('', [record('My Local Band')])[0].name, 'My Local Band');
+  assert.equal(suggestBands('my', [record('My Local Band'), record('ＭＹ ＬＯＣＡＬ ＢＡＮＤ')]).filter(candidate => candidate.custom).length, 1);
   assert.deepEqual(suggestBands('', [record('Knosis')]), []);
   assert(BAND_CANDIDATE_COUNT >= 1274);
 });

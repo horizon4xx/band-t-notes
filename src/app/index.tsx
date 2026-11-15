@@ -1,3 +1,4 @@
+import { Statistics } from '@/components/statistics';
 import { NotebookPager } from '@/components/notebook-pager';
 import { suggestFestivals } from '@/constants/festivals';
 import { notebookStorageKey, notebookAccent, type NotebookMode } from '@/constants/notebook-modes';
@@ -14,13 +15,6 @@ const notify = (title: string, message?: string) => {
 
 type Entry = { id: string; band: string; date: string; count: number };
 const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
-const normalize = (s: string) => s.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase();
-const group = (records: Entry[], field: 'band') => {
-  const map = new Map<string, { name: string; count: number }>();
-  for (const r of records) { const name = r[field] || '未指定'; const key = normalize(name); const item = map.get(key) || { name, count: 0 }; item.count += r.count; map.set(key, item); }
-  return [...map.values()].sort((a,b) => b.count-a.count || a.name.localeCompare(b.name));
-};
-
 const NotebookTabContext = createContext<{
   tab: string;
   setTab: (tab: string) => void;
@@ -99,10 +93,7 @@ function TeeNotebook({ mode, onSwitch }: { mode: NotebookMode; onSwitch: (mode: 
     }
     Alert.alert('記録を削除しますか？', `${r.band} / ${r.date} / ${r.count}枚`, [{ text:'キャンセル', style:'cancel' }, { text:'削除', style:'destructive', onPress: () => { void persist(records.filter(item => item.id !== r.id)); } }]);
   }
-  const filtered = records.filter(r => period === 'すべて' || r.date.startsWith(today().slice(0,7)));
-  const ranking = group(filtered, 'band');
-  const suggestions = band.trim() && showSuggestions ? (festival ? suggestFestivals(band, records) : suggestBands(band, records)) : [];
-  const total = filtered.reduce((n,r) => n+r.count,0);
+  const suggestions = showSuggestions ? (festival ? suggestFestivals(band, records) : suggestBands(band, records)) : [];
 
 
   return (
@@ -138,11 +129,7 @@ function TeeNotebook({ mode, onSwitch }: { mode: NotebookMode; onSwitch: (mode: 
             {!!notice && <Text accessibilityLiveRegion="polite" style={styles.success}>{notice}</Text>}
             <Text style={styles.note}>日付は記録した当日に自動設定。見つけたらその場で記録しよう。</Text>
           </View>}
-          {tab === '統計' && <>
-            <View style={styles.filters}>{['すべて','今月'].map(p => <Pressable key={p} onPress={() => setPeriod(p)} style={[styles.chip,period===p && styles.selected]}><Text style={period===p ? styles.selectedText : styles.muted}>{p}</Text></Pressable>)}</View>
-            <View style={styles.summary}><View><Text style={styles.big}>{total}</Text><Text style={styles.muted}>見かけた枚数</Text></View><View><Text style={styles.big}>{ranking.length}</Text><Text style={styles.muted}>{festival ? 'フェス数' : 'バンド数'}</Text></View></View>
-            <View style={styles.card}><Text style={styles.heading}>{festival ? 'フェス別ランキング' : 'バンド別ランキング'}</Text>{!ranking.length && <Text style={styles.muted}>記録すると、ここにランキングが表示されます。</Text>}{ranking.map((r,i) => <View key={normalize(r.name)} style={styles.rank}><View style={styles.row}><Text style={styles.rankName}>{i+1}. {r.name}</Text><Text style={styles.rankCount}>{r.count}枚</Text></View><View style={styles.barTrack}><View style={[styles.bar,{width:`${r.count/ranking[0].count*100}%`}]} /></View></View>)}</View>
-          </>}
+          {tab === '統計' && <Statistics records={records} mode={mode} today={today()} period={period} onPeriodChange={setPeriod} />}
           {tab === '履歴' && <><Text style={styles.heading}>見つけた記録 · {records.length}件</Text>{!records.length && <View style={styles.card}><Text style={styles.muted}>まだ記録がありません。「記録」から最初の1枚を追加してみよう。</Text></View>}{[...records].sort((a,b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id)).map(r => <View key={r.id} style={styles.card}><View style={styles.row}><Text style={styles.rankName}>{r.band}</Text><Text style={styles.rankCount}>{r.count}枚</Text></View><Text style={styles.muted}>{r.date}</Text><View style={styles.actions}><Pressable disabled={busy} onPress={() => {setBand(r.band);setShowSuggestions(false);setCount(r.count);setEditing(r.id);setNotice('');setTab('記録');}} style={styles.smallButton}><Text style={styles.edit}>編集</Text></Pressable><Pressable disabled={busy} onPress={() => remove(r)} style={styles.smallButton}><Text style={styles.delete}>削除</Text></Pressable></View></View>)}</>}
         </ScrollView>
       </KeyboardAvoidingView>

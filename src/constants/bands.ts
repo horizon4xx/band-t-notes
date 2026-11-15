@@ -76,18 +76,27 @@ function historyContext(history: History) {
 
 export function suggestBands(input: string, history: History) {
   const query = key(input);
-  if (!query) return [];
   const context = historyContext(history);
-  return [...catalog.values()]
+  const personal = new Map<string, Candidate & { custom: boolean; frequency: number }>();
+  for (const entry of history) {
+    const name = (typeof entry === 'string' ? entry : entry.band).trim();
+    if (!key(name) || resolveName(name)) continue;
+    const previous = personal.get(key(name));
+    personal.set(key(name), { name: previous?.name ?? name, aliases: [], used: true, custom: true,
+      frequency: (previous?.frequency ?? 0) + (typeof entry === 'string' ? 1 : entry.count) });
+  }
+  return [...catalog.values()].map(candidate => ({ ...candidate, custom: false, frequency: 0 })).concat([...personal.values()])
     .map(candidate => {
       const names = [candidate.name, ...candidate.aliases].map(key);
       const match = names.some(name => name === query) ? 3
         : names.some(name => name.startsWith(query)) ? 2
         : names.some(name => name.includes(query)) ? 1 : 0;
-      return { ...candidate, used: context.used.has(key(candidate.name)), match, affinity: context.score(candidate.name) };
+      return { ...candidate, used: candidate.custom || context.used.has(key(candidate.name)), match, affinity: context.score(candidate.name) };
     })
-    .filter(candidate => candidate.match > 0)
+    .filter(candidate => query ? candidate.match > 0 : candidate.custom)
     .sort((a, b) => b.match - a.match
+      || Number(b.custom) - Number(a.custom)
+      || b.frequency - a.frequency
       || b.affinity - a.affinity
       || Number(domestic.has(key(b.name))) - Number(domestic.has(key(a.name)))
       || a.name.localeCompare(b.name))
