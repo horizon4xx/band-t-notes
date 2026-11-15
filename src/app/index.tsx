@@ -100,7 +100,7 @@ function TeeNotebook({ mode, onSwitch }: { mode: NotebookMode; onSwitch: (mode: 
     <SafeAreaView style={styles.screen} edges={['top','left','right']}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
-          <Text style={styles.eyebrow}>{festival ? '街で出会ったフェスTを、記録する。' : '街で出会った音楽を、記録する。'}</Text>
+          <Text style={styles.eyebrow}>{festival ? '街で出会ったフェスTを、記録する。' : '町で出会ったバンドを、記録する。'}</Text>
           <Text style={styles.title}>{festival ? 'FES T NOTES' : 'BAND T NOTES'}</Text>
           <View style={styles.modeRow}>
             <Pressable accessibilityRole="button" accessibilityState={{ selected: !festival }} disabled={busy} onPress={() => onSwitch('band')} style={[styles.modeButton,!festival && styles.selected]}><Text style={!festival ? styles.selectedText : styles.muted}>バンドT</Text></Pressable>
