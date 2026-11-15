@@ -93,7 +93,7 @@ function TeeNotebook({ mode, onSwitch }: { mode: NotebookMode; onSwitch: (mode: 
     }
     Alert.alert('記録を削除しますか？', `${r.band} / ${r.date} / ${r.count}枚`, [{ text:'キャンセル', style:'cancel' }, { text:'削除', style:'destructive', onPress: () => { void persist(records.filter(item => item.id !== r.id)); } }]);
   }
-  const suggestions = showSuggestions ? (festival ? suggestFestivals(band, records) : suggestBands(band, records)) : [];
+  const suggestions = band.trim() && showSuggestions ? (festival ? suggestFestivals(band, records) : suggestBands(band, records)) : [];
 
 
   return (

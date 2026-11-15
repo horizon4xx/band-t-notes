@@ -77,6 +77,7 @@ function historyContext(history: History) {
 
 export function suggestBands(input: string, history: History) {
   const query = key(input);
+  if (!query) return [];
   const context = historyContext(history);
   const personal = new Map<string, Candidate & { custom: boolean; frequency: number }>();
   for (const entry of history) {
@@ -94,7 +95,7 @@ export function suggestBands(input: string, history: History) {
         : names.some(name => name.includes(query)) ? 1 : 0;
       return { ...candidate, used: candidate.custom || context.used.has(key(candidate.name)), match, affinity: context.score(candidate.name) };
     })
-    .filter(candidate => query ? candidate.match > 0 : candidate.custom || candidate.used || initialBandPriority(candidate.name) > 0)
+    .filter(candidate => candidate.match > 0)
     .sort((a, b) => b.match - a.match
       || Number(b.custom) - Number(a.custom)
       || b.frequency - a.frequency

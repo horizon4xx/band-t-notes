@@ -28,12 +28,15 @@ test('festival suggestions accept Japanese readings and abbreviations', () => {
   for (const [input, expected] of [['ヨンフェス', 'YON FES'], ['でっどぽっぷ', 'DEAD POP FESTiVAL'], ['ロッキン', 'ROCK IN JAPAN FESTIVAL'], ['やまびと', '山人音楽祭'], ['ポルノ', 'ポルノ超特急']]) {
     assert.equal(suggestFestivals(input, [])[0].name, expected);
   }
-  assert.equal(suggestFestivals('', [])[0].name, 'ROCK IN JAPAN FESTIVAL');
+  assert.deepEqual(suggestFestivals('', []), []);
 });
 
 test('festival search adds personal festival names without duplicates', () => {
   assert.equal(suggestFestivals('my', [{ band: 'MY FES', count: 10 }])[0].name, 'MY FES');
-  assert.equal(suggestFestivals('', [{ band: 'MY FES', count: 10 }])[0].name, 'MY FES');
+  assert.deepEqual(suggestFestivals('', [{ band: 'MY FES', count: 10 }]), []);
+  assert.deepEqual(suggestFestivals('　 ', [{ band: 'MY FES', count: 10 }]), []);
+  assert.equal(suggestFestivals('SUMMER SONIC', [{ band: 'SUMMER SONIC LOCAL', count: 10 }])[0].name, 'SUMMER SONIC');
+  assert.equal(suggestFestivals('yon', [{ band: 'MY YON', count: 10 }])[0].name, 'YON FES');
   assert.equal(suggestFestivals('s', [{ band: 'SUMMER LOCAL FES', count: 2 }])[0].name, 'SUMMER LOCAL FES');
   assert.equal(suggestFestivals('my', [{ band: 'MY FES', count: 1 }, { band: 'ｍｙ ｆｅｓ', count: 1 }]).length, 1);
   const suggestions = suggestFestivals('love', []);
