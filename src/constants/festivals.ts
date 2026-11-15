@@ -1,3 +1,5 @@
+import { initialFestivalPriority } from './candidate-priority';
+
 const FESTIVALS = [
   ['YON FES', 'ヨンフェス,よんふぇす,04'],
   ['DEAD POP FESTiVAL', 'デッドポップフェスティバル,デッドポップ,デッドポップフェス,DPF'],
@@ -97,7 +99,7 @@ export function suggestFestivals(input: string, history: readonly { band: string
     const terms = [festival.name, ...festival.aliases].map(key);
     const match = terms.includes(query) ? 3 : terms.some(t => t.startsWith(query)) ? 2 : terms.some(t => t.includes(query)) ? 1 : 0;
     return { ...festival, match, custom: personal.has(key(festival.name)), used: usage.has(key(festival.name)), frequency: usage.get(key(festival.name)) || 0 };
-  }).filter(festival => query ? festival.match > 0 : festival.custom)
-    .sort((a, b) => b.match - a.match || Number(b.custom) - Number(a.custom) || b.frequency - a.frequency || a.name.localeCompare(b.name))
+  }).filter(festival => query ? festival.match > 0 : festival.custom || festival.used || initialFestivalPriority(festival.name) > 0)
+    .sort((a, b) => b.match - a.match || Number(b.custom) - Number(a.custom) || b.frequency - a.frequency || initialFestivalPriority(b.name) - initialFestivalPriority(a.name) || a.name.localeCompare(b.name))
     .slice(0, 8);
 }

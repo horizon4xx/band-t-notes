@@ -1,4 +1,5 @@
 import { artistKey, rankByHistory, type BandHistory } from './history-ranking';
+import { initialBandPriority } from './candidate-priority';
 import { LIVEHOUSE_BANDS } from './livehouse-bands';
 import { FESTIVAL_BANDS } from './festival-bands';
 import { JAPANESE_BANDS } from './japanese-bands';
@@ -93,11 +94,12 @@ export function suggestBands(input: string, history: History) {
         : names.some(name => name.includes(query)) ? 1 : 0;
       return { ...candidate, used: candidate.custom || context.used.has(key(candidate.name)), match, affinity: context.score(candidate.name) };
     })
-    .filter(candidate => query ? candidate.match > 0 : candidate.custom)
+    .filter(candidate => query ? candidate.match > 0 : candidate.custom || candidate.used || initialBandPriority(candidate.name) > 0)
     .sort((a, b) => b.match - a.match
       || Number(b.custom) - Number(a.custom)
       || b.frequency - a.frequency
       || b.affinity - a.affinity
+      || initialBandPriority(b.name) - initialBandPriority(a.name)
       || Number(domestic.has(key(b.name))) - Number(domestic.has(key(a.name)))
       || a.name.localeCompare(b.name))
     .slice(0, 8);

@@ -36,7 +36,6 @@ export function createStatisticsImage(source: StatisticsData, mode: NotebookMode
   text(String(data.total), 64, 390, 98, accent, true); text('見かけた枚数', 64, 438, 28, '#B9B9C6');
   text(String(data.uniqueCount), 620, 390, 98, accent, true); text(mode === 'festival' ? 'フェス数' : 'バンド数', 620, 438, 28, '#B9B9C6');
   text(data.chartLabel, 64, 525, 32, '#F7F7FB', true);
-  text('縦軸：枚数 ／ 横軸：日にち', 64, 571, 24, '#9292A3');
   const left = 130, right = 1000, top = 620, bottom = 830;
   const max = chartMaximum(data.days);
   for (let step = 0; step <= 4; step++) {

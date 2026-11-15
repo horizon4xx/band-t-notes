@@ -19,7 +19,6 @@ export function Statistics({ records, mode, today, period, onPeriodChange }: { r
     <View style={styles.summary}><View><Text style={[styles.big, { color: accent }]}>{data.total}</Text><Text style={styles.muted}>見かけた枚数</Text></View><View><Text style={[styles.big, { color: accent }]}>{data.ranking.length}</Text><Text style={styles.muted}>{mode === 'festival' ? 'フェス数' : 'バンド数'}</Text></View></View>
     <View style={styles.card}>
       <Text style={styles.heading}>日別の枚数</Text>
-      <Text style={styles.muted}>横軸：日にち ／ 縦軸：Tシャツの枚数</Text>
       {!data.days.length ? <Text style={styles.muted}>記録すると日別の棒グラフが表示されます。</Text> : <>
         <Text style={styles.hint}>棒をタップして内訳を見る · 左右にスクロール</Text>
         <View style={styles.chart}>

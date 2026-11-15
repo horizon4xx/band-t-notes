@@ -6,7 +6,7 @@ const ts = require('typescript');
 function load(relative) {
   const file = path.resolve(__dirname, '..', relative);
   const module = { exports: {} };
-  new Function('exports', 'module', ts.transpileModule(fs.readFileSync(file, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText)(module.exports, module);
+  new Function('require', 'exports', 'module', ts.transpileModule(fs.readFileSync(file, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText)(name => load(path.relative(path.resolve(__dirname, '..'), path.resolve(path.dirname(file), name + '.ts'))), module.exports, module);
   return module.exports;
 }
 const { notebookStorageKey, notebookAccent, NOTEBOOK_PAGES, notebookPageIndex } = load('src/constants/notebook-modes.ts');
@@ -28,7 +28,7 @@ test('festival suggestions accept Japanese readings and abbreviations', () => {
   for (const [input, expected] of [['ヨンフェス', 'YON FES'], ['でっどぽっぷ', 'DEAD POP FESTiVAL'], ['ロッキン', 'ROCK IN JAPAN FESTIVAL'], ['やまびと', '山人音楽祭'], ['ポルノ', 'ポルノ超特急']]) {
     assert.equal(suggestFestivals(input, [])[0].name, expected);
   }
-  assert.deepEqual(suggestFestivals('', []), []);
+  assert.equal(suggestFestivals('', [])[0].name, 'ROCK IN JAPAN FESTIVAL');
 });
 
 test('festival search adds personal festival names without duplicates', () => {

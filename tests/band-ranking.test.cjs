@@ -48,8 +48,14 @@ test('personal names join suggestions and take priority among matching names', (
   assert.equal(suggestBands('sumika', [record('SUMIKA LOCAL')])[0].name, 'sumika');
   assert.equal(suggestBands('', [record('My Local Band')])[0].name, 'My Local Band');
   assert.equal(suggestBands('my', [record('My Local Band'), record('ＭＹ ＬＯＣＡＬ ＢＡＮＤ')]).filter(candidate => candidate.custom).length, 1);
-  assert.deepEqual(suggestBands('', [record('Knosis')]), []);
+  assert(suggestBands('', [record('Knosis')]).some(candidate => candidate.name === 'Knosis'));
   assert(BAND_CANDIDATE_COUNT >= 1274);
+});
+
+test('initial suggestions use familiar names before alphabetical order', () => {
+  assert.equal(suggestBands('', [])[0].name, 'Mrs. GREEN APPLE');
+  assert.equal(suggestBands('s', [])[0].name, 'スピッツ');
+  assert.equal(suggestBands('しむ', [])[0].name, 'SiM');
 });
 
 test('recent and frequent sightings outweigh old isolated sightings', () => {
