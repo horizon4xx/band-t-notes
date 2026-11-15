@@ -5,7 +5,7 @@ const test = require('node:test');
 const ts = require('typescript');
 const moduleUnderTest = { exports: {} };
 new Function('exports', 'module', ts.transpileModule(fs.readFileSync(path.resolve(__dirname, '../src/utils/statistics.ts'), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText)(moduleUnderTest.exports, moduleUnderTest);
-const { buildStatistics, shareStatistics, chartMaximum } = moduleUnderTest.exports;
+const { buildStatistics, chartMaximum } = moduleUnderTest.exports;
 const record = (band, date, count) => ({ band, date, count });
 
 test('daily totals count shirts, fill zero days and aggregate same-name entries', () => {
@@ -25,16 +25,9 @@ test('current month excludes older data and handles month boundaries and leap da
   assert.equal(all.days[1].date, '2024-02-29');
   assert.equal(all.days[1].count, 0);
 });
-test('sharing labels cropped graph and top ten while retaining full totals', () => {
-  const records = Array.from({ length: 12 }, (_, index) => record(`Band ${index}`, '2026-10-01', index + 1));
-  const full = buildStatistics(records, 'すべて', '2026-11-16');
-  const share = shareStatistics(full);
-  assert.equal(share.total, 78);
-  assert.equal(share.uniqueCount, 12);
-  assert.equal(share.ranking.length, 10);
-  assert.equal(share.days.length, 31);
-  assert.match(share.chartLabel, /31/);
-  assert.match(share.rankingLabel, /10/);
-  assert.equal(full.ranking.length, 12);
-  assert.deepEqual(buildStatistics([], '今月', '2026-11-16').days, []);
+test('empty records have zero totals and no chart days', () => {
+  const data = buildStatistics([], '今月', '2026-11-16');
+  assert.deepEqual(data.days, []);
+  assert.deepEqual(data.ranking, []);
+  assert.equal(data.total, 0);
 });

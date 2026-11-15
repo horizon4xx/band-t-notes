@@ -39,13 +39,3 @@ export function buildStatistics(records: readonly TeeRecord[], period: string, t
 export const chartMaximum = (days: readonly DailyCount[]) => Math.max(4, Math.ceil(Math.max(0, ...days.map(day => day.count)) / 4) * 4);
 export const shortDate = (date: string) => `${Number(date.slice(5, 7))}/${Number(date.slice(8, 10))}`;
 
-export function shareStatistics(data: StatisticsData) {
-  return {
-    ...data,
-    days: data.days.slice(-31),
-    ranking: data.ranking.slice(0, 10),
-    chartLabel: data.days.length > 31 ? '日別の枚数 · 直近31日' : '日別の枚数',
-    rankingLabel: data.ranking.length > 10 ? 'ランキング · 上位10件' : 'ランキング',
-    uniqueCount: data.ranking.length,
-  };
-}

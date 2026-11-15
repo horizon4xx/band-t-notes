@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { notebookAccent, type NotebookMode } from '@/constants/notebook-modes';
 import { buildStatistics, chartMaximum, shortDate, type TeeRecord } from '@/utils/statistics';
-import { StatisticsShare } from './statistics-share';
 
 export function Statistics({ records, mode, today, period, onPeriodChange }: { records: readonly TeeRecord[]; mode: NotebookMode; today: string; period: string; onPeriodChange: (period: string) => void }) {
   const [selectedDate, setSelectedDate] = useState('');
@@ -14,7 +13,6 @@ export function Statistics({ records, mode, today, period, onPeriodChange }: { r
   return <>
     <View style={styles.toolbar}>
       <View style={styles.filters}>{['すべて', '今月'].map(value => <Pressable key={value} accessibilityRole="button" accessibilityState={{ selected: period === value }} onPress={() => onPeriodChange(value)} style={[styles.chip, period === value && { backgroundColor: accent }]}><Text style={period === value ? styles.selected : styles.muted}>{value}</Text></Pressable>)}</View>
-      <StatisticsShare data={data} mode={mode} />
     </View>
     <View style={styles.summary}><View><Text style={[styles.big, { color: accent }]}>{data.total}</Text><Text style={styles.muted}>見かけた枚数</Text></View><View><Text style={[styles.big, { color: accent }]}>{data.ranking.length}</Text><Text style={styles.muted}>{mode === 'festival' ? 'フェス数' : 'バンド数'}</Text></View></View>
     <View style={styles.card}>
